@@ -1,0 +1,23 @@
+{
+  "users": [
+    {
+      "id": "1ac7405a-0981-4f5e-ae46-eb4cc4606fd0",
+      "name": "Pradeep Pandit",
+      "email": "codepradeep07@gmail.com",
+      "password": "$2b$10$oKXT65BU91PIyfDUTXuOleIB9njxgNJp5GkqYChx7X/YucaITwAg6",
+      "streak_count": 0,
+      "last_activity": "2026-04-03",
+      "created_at": "2026-04-03T08:43:09.514Z"
+    },
+    {
+      "id": "a8992195-f6fe-4592-aab6-d60eb78c8c1c",
+      "name": "Mahendra Kumar Nayak",
+      "email": "maha75kal@gmail.com",
+      "password": "$2b$10$dBJEjCSfXbN/Cwf.djc.juhjcmrH3GwnDX4InE5g1UqMIRJCnNxxO",
+      "streak_count": 0,
+      "last_activity": "2026-04-03",
+      "created_at": "2026-04-03T08:44:25.138Z"
+    }
+  ],
+  "skills": []
+}

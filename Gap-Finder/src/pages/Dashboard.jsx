@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 import { 
   Target, 
   Home, 
@@ -15,9 +16,40 @@ import {
 } from 'lucide-react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { userProfile, currentSkills, skillGaps, roadmapData, jobReadinessScore, skillDistribution } from '../data/staticData';
+import SettingsTab from '../components/SettingsTab';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [liveUser, setLiveUser] = useState(null);
+  const [liveStats, setLiveStats] = useState({ total_skills: 0, completed_skills: 0, avg_progress: 0, current_streak: 0 });
+  const [liveSkills, setLiveSkills] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [userRes, statsRes, skillsRes] = await Promise.all([
+          api.get('/auth/me'),
+          api.get('/stats/dashboard'),
+          api.get('/skills')
+        ]);
+        setLiveUser(userRes.data.data);
+        setLiveStats(statsRes.data.data);
+        setLiveSkills(skillsRes.data.data.data || []);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        if (error.response?.status === 401) navigate('/login');
+      }
+    };
+    fetchData();
+  }, [navigate]);
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
 
   const readinessData = [
     {
@@ -53,38 +85,38 @@ const Dashboard = () => {
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
-            <a 
-              href="#overview" 
-              className="flex items-center space-x-3 px-4 py-3 bg-indigo-600/20 text-indigo-300 rounded-xl transition-colors"
+            <button 
+              onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'overview' ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
               data-testid="nav-overview"
             >
               <Home className="w-5 h-5" />
               <span className="font-medium">Overview</span>
-            </a>
-            <a 
-              href="#skills" 
-              className="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:bg-white/5 hover:text-white rounded-xl transition-colors"
+            </button>
+            <button 
+              onClick={() => { setActiveTab('skills'); setSidebarOpen(false); }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'skills' ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
               data-testid="nav-skills"
             >
               <TrendingUp className="w-5 h-5" />
               <span className="font-medium">Skills</span>
-            </a>
-            <a 
-              href="#roadmap" 
-              className="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:bg-white/5 hover:text-white rounded-xl transition-colors"
+            </button>
+            <button 
+              onClick={() => { setActiveTab('roadmap'); setSidebarOpen(false); }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'roadmap' ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
               data-testid="nav-roadmap"
             >
               <BookOpen className="w-5 h-5" />
               <span className="font-medium">Roadmap</span>
-            </a>
-            <a 
-              href="#settings" 
-              className="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:bg-white/5 hover:text-white rounded-xl transition-colors"
+            </button>
+            <button 
+              onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'settings' ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
               data-testid="nav-settings"
             >
               <Settings className="w-5 h-5" />
               <span className="font-medium">Settings</span>
-            </a>
+            </button>
           </nav>
 
           {/* User Profile */}
@@ -92,27 +124,27 @@ const Dashboard = () => {
             <div className="flex items-center space-x-3 mb-3" data-testid="user-profile">
               <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
-                  {userProfile.name.split(' ').map(n => n[0]).join('')}
+                  {liveUser ? liveUser.name.split(' ').map(n => n[0]).join('') : userProfile.name.split(' ').map(n => n[0]).join('')}
                 </span>
               </div>
               <div className="flex-1">
                 <p className="text-white text-sm font-medium" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
-                  {userProfile.name}
+                  {liveUser ? liveUser.name : userProfile.name}
                 </p>
                 <p className="text-slate-500 text-xs" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  {userProfile.email}
+                  {liveUser ? liveUser.email : userProfile.email}
                 </p>
               </div>
             </div>
-            <Link
-              to="/"
+            <button
+              onClick={handleLogout}
               data-testid="logout-button"
               className="flex items-center justify-center space-x-2 w-full px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-colors"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
               <LogOut className="w-4 h-4" />
               <span className="text-sm">Logout</span>
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
@@ -136,14 +168,14 @@ const Dashboard = () => {
                     Dashboard
                   </h1>
                   <p className="text-sm text-slate-400" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                    Welcome back, {userProfile.name.split(' ')[0]}!
+                    Welcome back, {liveUser ? liveUser.name.split(' ')[0] : userProfile.name.split(' ')[0]}!
                   </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm text-slate-400" style={{ fontFamily: "'Outfit', sans-serif" }}>Dream Job</p>
                 <p className="text-white font-semibold" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
-                  {userProfile.dreamJob}
+                  {(liveUser && liveUser.dreamJob) ? liveUser.dreamJob : userProfile.dreamJob}
                 </p>
               </div>
             </div>
@@ -152,8 +184,15 @@ const Dashboard = () => {
 
         {/* Dashboard Content */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
-          {/* Job Readiness Score - Hero Card */}
-          <div className="mb-8">
+          
+          {activeTab === 'settings' && (
+             <SettingsTab liveUser={liveUser} setLiveUser={setLiveUser} />
+          )}
+
+          {activeTab === 'overview' && (
+            <div className="space-y-8">
+              {/* Job Readiness Score - Hero Card */}
+              <div className="mb-8">
             <div className="bg-gradient-to-br from-indigo-600/20 to-violet-600/20 border border-indigo-500/30 rounded-3xl p-8" data-testid="readiness-score-card">
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div>
@@ -240,10 +279,10 @@ const Dashboard = () => {
                   <Clock className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-2xl font-black text-white" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
-                  45
+                  {liveStats?.current_streak || 1}
                 </span>
               </div>
-              <h3 className="text-slate-400 text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>Days Active</h3>
+              <h3 className="text-slate-400 text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>Daily Streak</h3>
             </div>
 
             <div className="bg-[#12141D]/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6" data-testid="stat-milestones">
@@ -258,8 +297,10 @@ const Dashboard = () => {
               <h3 className="text-slate-400 text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>Milestones Completed</h3>
             </div>
           </div>
+            </div>
+          )}
 
-          {/* Main Content Grid */}
+          {activeTab === 'skills' && (
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Left Column - 2 cols */}
             <div className="lg:col-span-2 space-y-6">
@@ -269,20 +310,20 @@ const Dashboard = () => {
                   Your Current Skills
                 </h3>
                 <div className="space-y-4">
-                  {currentSkills.map((skill) => (
+                  {(liveSkills.length > 0 ? liveSkills : currentSkills).map((skill) => (
                     <div key={skill.id} data-testid={`skill-${skill.id}`}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-white font-medium" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                          {skill.name}
+                          {skill.title || skill.name}
                         </span>
                         <span className="text-sm text-slate-400" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                          {skill.level}%
+                          {skill.progress || skill.level || 0}%
                         </span>
                       </div>
                       <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                         <div 
                           className="bg-gradient-to-r from-indigo-500 to-cyan-400 h-full transition-all duration-1000 ease-out"
-                          style={{ width: `${skill.level}%` }}
+                          style={{ width: `${skill.progress || skill.level || 0}%` }}
                         ></div>
                       </div>
                     </div>
@@ -348,8 +389,9 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Roadmap Section */}
+          {activeTab === 'roadmap' && (
           <div className="mt-8 bg-[#12141D]/60 backdrop-blur-xl border border-white/10 rounded-2xl p-8" id="roadmap" data-testid="roadmap-section">
             <h3 className="text-3xl font-black text-white mb-8" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>
               Your 30-90 Day Roadmap
@@ -412,6 +454,7 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
+          )}
         </main>
       </div>
 

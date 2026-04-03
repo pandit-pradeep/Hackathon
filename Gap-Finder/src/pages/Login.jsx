@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Target } from 'lucide-react';
+import api from '../utils/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ const Login = () => {
     password: ''
   });
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const validateForm = () => {
@@ -30,14 +32,25 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (validateForm()) {
-      // Simulate login (frontend only - no real authentication)
-      console.log('Login attempted:', formData);
-      // Redirect to dashboard
-      navigate('/dashboard');
+      try {
+        setApiError('');
+        const response = await api.post('/auth/login', {
+          email: formData.email,
+          password: formData.password
+        });
+        
+        if (response.data.success) {
+          localStorage.setItem('token', response.data.data.token);
+          navigate('/dashboard');
+        }
+      } catch (err) {
+        setApiError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+        console.error('Login error:', err);
+      }
     }
   };
 
@@ -95,6 +108,14 @@ const Login = () => {
                 Enter your credentials to access your dashboard
               </p>
             </div>
+
+            {apiError && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-xl">
+                <p className="text-red-400 text-sm text-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  {apiError}
+                </p>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} data-testid="login-form">
               <div className="space-y-5">
