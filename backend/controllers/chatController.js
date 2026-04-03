@@ -1,5 +1,6 @@
 const { GoogleGenAI } = require('@google/genai');
 
+
 const getChatResponse = async (req, res) => {
   try {
     if (!process.env.GEMINI_API_KEY) {
@@ -37,7 +38,14 @@ const getChatResponse = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Chat AI Error:', error);
+    if (error.status === 429 || error?.message?.includes('429') || error?.message?.includes('Quota exceeded')) {
+      console.warn("⚠️ GEMINI RATE LIMIT REACHED: Using fallback chat data.");
+      return res.status(200).json({ 
+        success: true, 
+        data: "Whew! My circuits are running a bit hot from all this analyzing! 🔥 (Rate Limit Reached). Give me a few minutes to cool down. In the meantime, you can focus on the skills listed in your Gap Analysis, they are the secret to unlocking your dream job! 🚀" 
+      });
+    }
+
     res.status(500).json({ success: false, message: 'AI Service failed. Please check the API key and try again.'});
   }
 };

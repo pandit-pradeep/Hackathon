@@ -92,7 +92,8 @@ const ResumeAnalyzer = () => {
         const data = analysisResponse.data.data;
         setAnalysisResult({
           current_skills: data.user_skills ? data.user_skills.map(s => s.name) : [],
-          missing_skills: data.missing_skills ? data.missing_skills.map(s => s.name) : []
+          missing_skills: data.missing_skills ? data.missing_skills.map(s => s.name) : [],
+          roadmap: data.roadmap || []
         });
       }
     } catch (err) {
@@ -291,6 +292,38 @@ const ResumeAnalyzer = () => {
               </div>
             </div>
           </div>
+
+          {/* AI Generated Roadmap */}
+          {analysisResult.roadmap && analysisResult.roadmap.length > 0 && (
+            <div className="mt-6 bg-gradient-to-b from-indigo-500/10 to-transparent border border-indigo-500/20 rounded-2xl p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Target className="w-6 h-6 text-indigo-400" />
+                <h4 className="text-lg font-bold text-white">AI Learning Roadmap</h4>
+              </div>
+              <p className="text-slate-400 text-sm mb-6">Here is your step-by-step personalized guide to bridging the gap.</p>
+              <div className="space-y-4">
+                {analysisResult.roadmap.map((phase, i) => (
+                  <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col md:flex-row md:items-start md:space-x-4">
+                    <div className="bg-indigo-500/20 text-indigo-300 font-bold px-4 py-2 rounded-lg shrink-0 mt-1">
+                      Week {phase.week}
+                    </div>
+                    <div>
+                      <h5 className="text-white font-medium text-lg">{phase.focus}</h5>
+                      <ul className="mt-2 space-y-1">
+                        {phase.tasks && phase.tasks.map((task, j) => (
+                          <li key={j} className="text-sm text-slate-400 flex items-start space-x-2">
+                             <span className="text-indigo-400 mt-0.5">•</span>
+                             <span>{task}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       )}
     </div>
