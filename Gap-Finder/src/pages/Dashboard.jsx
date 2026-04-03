@@ -17,6 +17,7 @@ import {
 import { RadialBarChart, RadialBar, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { userProfile, currentSkills, skillGaps, roadmapData, jobReadinessScore, skillDistribution } from '../data/staticData';
 import SettingsTab from '../components/SettingsTab';
+import ResumeAnalyzer from '../components/ResumeAnalyzer';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -191,6 +192,8 @@ const Dashboard = () => {
 
           {activeTab === 'overview' && (
             <div className="space-y-8">
+              <ResumeAnalyzer />
+
               {/* Job Readiness Score - Hero Card */}
               <div className="mb-8">
             <div className="bg-gradient-to-br from-indigo-600/20 to-violet-600/20 border border-indigo-500/30 rounded-3xl p-8" data-testid="readiness-score-card">

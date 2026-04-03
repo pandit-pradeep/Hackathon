@@ -17,6 +17,8 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 
+import GapRadar from './pages/GapRadar';
+
 function App() {
   return (
     <BrowserRouter>
@@ -26,6 +28,7 @@ function App() {
           <Route path="/" element={<><Navbar /><Home /><Footer /><Chatbot /></>} />
           <Route path="/about" element={<><Navbar /><About /><Footer /><Chatbot /></>} />
           <Route path="/features" element={<><Navbar /><Features /><Footer /><Chatbot /></>} />
+          <Route path="/radar" element={<><Navbar /><GapRadar /><Footer /><Chatbot /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /><Footer /><Chatbot /></>} />
           
           {/* Auth Pages (No Navbar/Footer) */}

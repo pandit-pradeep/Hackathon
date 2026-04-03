@@ -6,6 +6,7 @@ const { validateRegister, validateLogin, validate } = require('../middleware/val
 
 router.post('/register', validateRegister, validate, registerUser);
 router.post('/login', validateLogin, validate, loginUser);
+
 router.get('/me', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
 

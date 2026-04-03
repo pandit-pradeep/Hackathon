@@ -32,7 +32,7 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
 
     if (validateForm()) {
@@ -48,7 +48,11 @@ const Login = () => {
           navigate('/dashboard');
         }
       } catch (err) {
-        setApiError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+        if (!err.response) {
+          setApiError('Network Error: Cannot connect to server. Ensure the backend is running.');
+        } else {
+          setApiError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+        }
         console.error('Login error:', err);
       }
     }
@@ -95,12 +99,11 @@ const Login = () => {
 
         {/* Right Side - Login Form */}
         <div className="w-full">
-          <div className="bg-[#12141D]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-12">
-            <div className="text-center mb-8">
+          <div className="bg-[#12141D]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-12 border-t-4 border-t-indigo-500 shadow-2xl relative overflow-hidden">
+            <div className="text-center mb-8 relative z-10">
               <h1 
                 className="text-3xl sm:text-4xl font-black text-white mb-3 tracking-tight"
                 style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}
-                data-testid="login-title"
               >
                 Log In
               </h1>
@@ -110,14 +113,14 @@ const Login = () => {
             </div>
 
             {apiError && (
-              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-xl">
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-xl relative z-10">
                 <p className="text-red-400 text-sm text-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
                   {apiError}
                 </p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} data-testid="login-form">
+            <form onSubmit={handleLoginSubmit} data-testid="login-form" className="relative z-10">
               <div className="space-y-5">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2" style={{ fontFamily: "'Outfit', sans-serif" }}>
@@ -131,7 +134,6 @@ const Login = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      data-testid="login-input-email"
                       className={`w-full bg-white/5 border ${
                         errors.email ? 'border-red-500/50' : 'border-white/10'
                       } rounded-xl pl-12 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all`}
@@ -158,7 +160,6 @@ const Login = () => {
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      data-testid="login-input-password"
                       className={`w-full bg-white/5 border ${
                         errors.password ? 'border-red-500/50' : 'border-white/10'
                       } rounded-xl pl-12 pr-12 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all`}
@@ -168,7 +169,6 @@ const Login = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      data-testid="toggle-password-visibility"
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -186,7 +186,6 @@ const Login = () => {
                     <input
                       type="checkbox"
                       className="w-4 h-4 rounded border-white/10 bg-white/5 text-indigo-600 focus:ring-indigo-500/50"
-                      data-testid="remember-me-checkbox"
                     />
                     <span className="ml-2 text-sm text-slate-400" style={{ fontFamily: "'Outfit', sans-serif" }}>Remember me</span>
                   </label>
@@ -197,16 +196,15 @@ const Login = () => {
 
                 <button
                   type="submit"
-                  data-testid="login-submit-button"
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-full px-8 py-3 font-medium transition-all duration-300 shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:shadow-[0_0_40px_rgba(99,102,241,0.5)]"
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-full px-8 py-3 font-medium transition-all duration-300 shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:shadow-[0_0_40px_rgba(99,102,241,0.5)] flex justify-center items-center gap-2"
                   style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}
                 >
-                  Log In
+                  Log In <Mail className="w-4 h-4 ml-2" />
                 </button>
               </div>
             </form>
 
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center relative z-10">
               <p className="text-slate-400 text-sm" style={{ fontFamily: "'Outfit', sans-serif" }}>
                 Don't have an account?{' '}
                 <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors" data-testid="signup-link">

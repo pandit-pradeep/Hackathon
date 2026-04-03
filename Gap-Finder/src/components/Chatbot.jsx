@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
+import api from '../utils/api';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,85 +31,7 @@ const Chatbot = () => {
     scrollToBottom();
   }, [messages]);
 
-  const getBotResponse = (userInput) => {
-    const input = userInput.toLowerCase().trim();
-
-    // Greeting patterns
-    if (input.match(/\b(hi|hello|hey|greetings|good morning|good evening)\b/)) {
-      return "Hello! 🌟 Great to see you here! You're one step closer to your dream job. What would you like to know?";
-    }
-
-    // GapFinder/Project related
-    if (input.match(/\b(what is|tell me about|explain|gapfinder|this project|this app|what does)\b/)) {
-      return "GapFinder is your personal career companion! 🎯 We analyze the gap between your current skills and your dream job, then create a personalized 30-90 day roadmap to bridge that gap. Think of me as your GPS for career success!";
-    }
-
-    // Skills related
-    if (input.match(/\b(skills|skill gap|my skills|what skills|learn)\b/)) {
-      return "Your skills are your superpower! 💪 Head to the Dashboard to see your current skills, identify gaps, and track your progress. Remember: every expert was once a beginner. You've got this!";
-    }
-
-    // Roadmap related
-    if (input.match(/\b(roadmap|plan|timeline|learning path|30.*90|days)\b/)) {
-      return "Your personalized roadmap is your success blueprint! 🗺️ It breaks down your journey into 30-day phases with clear milestones. Check your Dashboard for your custom plan. Small steps lead to big achievements!";
-    }
-
-    // Motivation
-    if (input.match(/\b(motivate|motivation|inspire|encourage|difficult|hard|struggle|give up)\b/)) {
-      return "Listen, you're amazing for being here! 🌟 Every line of code you write, every concept you learn, is a step toward your dream. The journey might be challenging, but YOU are capable of incredible things. Keep pushing forward—your future self will thank you! 💪✨";
-    }
-
-    // Progress/Tracking
-    if (input.match(/\b(progress|track|score|readiness|how am i doing)\b/)) {
-      return "Your progress is looking great! 📈 Check your Dashboard for your Job Readiness Score and detailed progress tracking. Every percentage point is a victory. Celebrate your wins, no matter how small!";
-    }
-
-    // Courses/Learning
-    if (input.match(/\b(course|courses|udemy|coursera|learn|study|tutorial|resources)\b/)) {
-      return "We've curated the best courses just for YOU! 📚 Check the Dashboard for personalized course recommendations based on your skill gaps. Quality learning resources + your dedication = unstoppable combo!";
-    }
-
-    // React/Frontend
-    if (input.match(/\b(react|frontend|javascript|js|html|css|web development)\b/)) {
-      return "Frontend development is an awesome choice! 🎨 Start with HTML/CSS mastery, then dive deep into JavaScript. React comes next—it's powerful and in high demand. Practice by building real projects. You're on the right path!";
-    }
-
-    // Backend
-    if (input.match(/\b(backend|node|nodejs|express|api|server|database)\b/)) {
-      return "Backend skills are crucial! 🔧 Focus on Node.js and Express for building APIs, then master databases like MongoDB or PostgreSQL. Start with simple CRUD operations and level up from there. The backend world needs talented developers like you!";
-    }
-
-    // Job/Career
-    if (input.match(/\b(job|career|hire|interview|work|employment|get hired)\b/)) {
-      return "Landing your dream job is absolutely within reach! 🎯 Focus on building your skills, creating a strong portfolio, and networking. Check your Job Readiness Score to see how close you are. You're building something incredible—employers will see that!";
-    }
-
-    // Time/Duration
-    if (input.match(/\b(how long|duration|time|when|fast)\b/)) {
-      return "Our roadmap is designed for 30-90 days, but remember: this is YOUR journey! ⏱️ Some people move faster, others take more time—both are perfectly fine. Consistency beats speed every time. Focus on daily progress, not perfection!";
-    }
-
-    // Help/Commands
-    if (input.match(/\b(help|commands|what can you do|features)\b/)) {
-      return "I'm here to help you succeed! 🤝 Ask me about:\n• GapFinder features\n• Your skills & progress\n• Learning roadmap\n• Course recommendations\n• Motivation & tips\n• Career advice\n\nWhat would you like to know?";
-    }
-
-    // Thanks
-    if (input.match(/\b(thank|thanks|appreciate|grateful)\b/)) {
-      return "You're so welcome! 😊 I'm honored to be part of your journey. Remember, I'm always here when you need guidance or a motivational boost. Keep crushing it! 🚀";
-    }
-
-    // Fallback response
-    const fallbackResponses = [
-      "That's a great question! 🤔 While I'm still learning, I can help you with skill gaps, roadmaps, and motivation. Try asking about your learning path or check out the Dashboard for detailed insights!",
-      "I want to help you succeed! 🌟 Ask me about your skills, roadmap, or how GapFinder works. Or head to the Dashboard to explore your personalized journey!",
-      "Hmm, I'm not quite sure about that, but I'm here to support your learning journey! 💡 Try asking about your skill gaps, progress tracking, or course recommendations."
-    ];
-
-    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-  };
-
-  const handleSend = (text = null) => {
+  const handleSend = async (text = null) => {
     const messageText = text || inputText.trim();
     if (!messageText) return;
 
@@ -120,20 +43,35 @@ const Chatbot = () => {
       timestamp: new Date()
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInputText('');
     setShowQuickReplies(false);
 
-    // Simulate typing delay
-    setTimeout(() => {
-      const botResponse = {
+    try {
+      const historyPayload = messages.map(m => ({ sender: m.sender, text: m.text }));
+      const response = await api.post('/chat', {
+        message: messageText,
+        history: historyPayload
+      });
+
+      if (response.data.success) {
+        setMessages((prev) => [...prev, {
+          id: Date.now() + 1,
+          text: response.data.data,
+          sender: 'bot',
+          timestamp: new Date()
+        }]);
+      }
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [...prev, {
         id: Date.now() + 1,
-        text: getBotResponse(messageText),
+        text: err.response?.data?.message || 'Oops, I am having trouble connecting to my AI brain. Make sure your API key is configured!',
         sender: 'bot',
         timestamp: new Date()
-      };
-      setMessages((prev) => [...prev, botResponse]);
-    }, 800);
+      }]);
+    }
   };
 
   const handleKeyPress = (e) => {

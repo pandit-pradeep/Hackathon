@@ -34,7 +34,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Authenticate a user
+// @desc    Authenticate a user (Simple Direct Login)
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
@@ -43,7 +43,6 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await userModel.findUserByEmail(email);
 
   if (user && (await bcrypt.compare(password, user.password))) {
-    
     // Streak logic check
     const today = new Date().setHours(0,0,0,0);
     const lastActivity = user.last_activity ? new Date(user.last_activity).setHours(0,0,0,0) : null;
@@ -53,10 +52,6 @@ const loginUser = asyncHandler(async (req, res) => {
 
     if (!lastActivity || today - lastActivity === ONE_DAY) {
       isNewDay = true;
-    } else if (today - lastActivity > ONE_DAY) {
-      // Logic could reset streak here, but for simplicity, wait for db schema rules or reset.
-      // Usually would reset, but we'll just update last activity if missed a day.
-      // Actually, we should reset it, but our schema doesn't have a reset function easily unless we do it here.
     }
 
     const { streak_count } = await userModel.updateLastActivityAndStreak(user.id, isNewDay);

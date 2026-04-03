@@ -64,7 +64,11 @@ const Signup = () => {
           navigate('/dashboard');
         }
       } catch (err) {
-        setApiError(err.response?.data?.message || 'Registration failed. Please try again.');
+        if (!err.response) {
+          setApiError('Network Error: Cannot connect to server. Ensure the backend is running.');
+        } else {
+          setApiError(err.response?.data?.message || 'Registration failed. Please try again.');
+        }
         console.error('Signup error:', err);
       }
     }

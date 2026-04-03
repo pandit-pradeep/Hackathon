@@ -7,6 +7,8 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const skillRoutes = require('./routes/skillRoutes');
 const statsRoutes = require('./routes/statsRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const resumeRoutes = require('./routes/resumeRoutes');
 
 const app = express();
 
@@ -28,6 +30,8 @@ app.use('/api/', apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/resume', resumeRoutes);
 
 // Database is now JSON file-based.
 const { initDb } = require('./utils/jsonDb');
