@@ -145,4 +145,158 @@ const radarAnalysis = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { uploadAndExtract, radarAnalysis };
+// @desc    Generate a learning roadmap based on resume analysis
+// @route   POST /api/resume/generate-roadmap
+// @access  Private
+const generateRoadmap = asyncHandler(async (req, res) => {
+  const { user_skills, missing_skills, gap_analysis, targetRole } = req.body;
+
+  if (!targetRole) {
+    return errorResponse(res, 400, 'Please provide targetRole.');
+  }
+
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Gemini API Key is missing. Please add GEMINI_API_KEY to your .env file.' 
+      });
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+    const prompt = `
+      You are an expert career mentor and roadmap generator.
+
+      Based on the user's resume analysis, generate a structured learning roadmap.
+
+      ---
+
+      ## INPUT DATA:
+
+      User Skills:
+      ${JSON.stringify(user_skills || [])}
+
+      Missing Skills:
+      ${JSON.stringify(missing_skills || [])}
+
+      Gap Analysis:
+      ${JSON.stringify(gap_analysis || [])}
+
+      Target Role:
+      "${targetRole}"
+
+      ---
+
+      ## YOUR TASK:
+
+      Create a personalized roadmap for the user to become job-ready.
+
+      ---
+
+      ## ROADMAP RULES:
+
+      1. Duration should be between 30 to 90 days
+      2. Divide roadmap into phases:
+         * Phase 1: Foundation
+         * Phase 2: Skill Building
+         * Phase 3: Advanced + Projects
+         * Phase 4: Interview Preparation
+      3. Each phase should include:
+         * Duration (in days)
+         * Skills to learn
+         * Tasks
+         * Mini goals
+      4. Include:
+         * Daily or weekly tasks
+         * Real-world projects
+         * Practice recommendations
+      5. Focus MORE on missing/high-priority skills
+      6. Keep roadmap realistic (not overloaded)
+
+      ---
+
+      ## IMPORTANT:
+
+      * Return ONLY valid JSON
+      * No extra text
+
+      ---
+
+      ## OUTPUT FORMAT:
+
+      {
+        "total_duration": "60 days",
+        "phases": [
+          {
+            "phase_name": "Foundation",
+            "duration": "15 days",
+            "focus_skills": ["HTML", "CSS"],
+            "tasks": [
+              "Learn basic HTML structure",
+              "Practice CSS layouts"
+            ],
+            "goal": "Build strong fundamentals"
+          },
+          {
+            "phase_name": "Skill Building",
+            "duration": "20 days",
+            "focus_skills": ["JavaScript", "React"],
+            "tasks": [
+              "Learn JavaScript concepts",
+              "Build small React projects"
+            ],
+            "goal": "Become comfortable with core tech"
+          },
+          {
+            "phase_name": "Advanced + Projects",
+            "duration": "15 days",
+            "focus_skills": ["APIs", "Performance"],
+            "tasks": [
+              "Build full-stack project",
+              "Optimize performance"
+            ],
+            "goal": "Project-ready skills"
+          },
+          {
+            "phase_name": "Interview Preparation",
+            "duration": "10 days",
+            "focus_skills": ["DSA", "Communication"],
+            "tasks": [
+              "Solve coding problems",
+              "Practice mock interviews"
+            ],
+            "goal": "Crack interviews confidently"
+          }
+        ]
+      }
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }]}],
+      config: {
+        temperature: 0.2, // lower temperature for more consistent structured data
+      }
+    });
+
+    let aiJson = response.text;
+    
+    // Safety cleaner if AI still outputs markdown despite constraints
+    if (aiJson.includes('\`\`\`json')) {
+        aiJson = aiJson.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '');
+    } else if (aiJson.includes('\`\`\`')) {
+        aiJson = aiJson.replace(/\`\`\`/g, '');
+    }
+    
+    const parsedData = JSON.parse(aiJson.trim());
+
+    return successResponse(res, 200, parsedData, 'Roadmap generated successfully.');
+
+  } catch (error) {
+    console.error('Roadmap Generation Error:', error);
+    return errorResponse(res, 500, 'Failed to generate roadmap with AI. ' + (error.message || ''));
+  }
+});
+
+module.exports = { uploadAndExtract, radarAnalysis, generateRoadmap };

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { protect } = require('../middleware/authMiddleware');
-const { uploadAndExtract, radarAnalysis } = require('../controllers/resumeController');
+const { uploadAndExtract, radarAnalysis, generateRoadmap } = require('../controllers/resumeController');
 
 // Multer parsing configuration - storing file in memory buffer
 const storage = multer.memoryStorage();
@@ -27,5 +27,8 @@ router.post('/upload', protect, upload.single('resume'), uploadAndExtract);
 
 // Analyze extracted text against a target role
 router.post('/radar-analysis', protect, radarAnalysis);
+
+// Generate roadmap based on analysis data
+router.post('/generate-roadmap', protect, generateRoadmap);
 
 module.exports = router;
